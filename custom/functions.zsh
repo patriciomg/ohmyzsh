@@ -237,6 +237,24 @@ caff() {
   spinner $pid "${1:-moon}" "☕ caffeinate ON "
 }
 
+# Sync my oh-my-zsh fork (origin = patriciomg/ohmyzsh, upstream = ohmyzsh).
+# master stays a pristine mirror of upstream; my stuff lives on `custom`.
+# Flow: fetch upstream → ff master → push fork → rebase custom → push custom.
+omz-sync() {
+  (
+    set -e
+    cd ~/.oh-my-zsh
+    git fetch upstream
+    git checkout -q master
+    git merge --ff-only upstream/master
+    git push origin master
+    git checkout -q custom
+    git -c rebase.autoStash=true rebase master
+    git push --force-with-lease origin custom
+  ) && echo "✅ oh-my-zsh synced: master = upstream, custom rebased & pushed" \
+    || echo "⚠️  sync stopped — check ~/.oh-my-zsh with git status"
+}
+
 
 hh() {
   (( $# )) && hist | rg "$@" || hist
@@ -1525,6 +1543,7 @@ function _osx_helpers_render() {
     "  ${cmd}asciinema${r}     ${desc}record/replay sessions${r}"
     ""
     "  ${y}${B}  Shell & Prompt${r}"
+    "  ${cmd}omz-sync${r}      ${desc}sync my oh-my-zsh fork from upstream${r}"
     "  ${cmd}prompt-label${r}  ${desc}change starship label${r}"
     "                ${w}prompt-label Hacking${r}"
     "                ${w}prompt-label -s Am malochen${r}"
